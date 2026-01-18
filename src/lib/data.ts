@@ -34,6 +34,9 @@ export interface Tip {
   extracted_at: string;
   verified_at?: string;
   topic_ids: string[];
+  // Documentation correlation
+  docs_url?: string;
+  docs_section?: string;
 }
 
 export const creators: Creator[] = [
@@ -148,6 +151,8 @@ export const tips: Tip[] = [
     extracted_at: '2024-01-08',
     verified_at: '2024-01-09',
     topic_ids: ['1', '2'],
+    docs_url: 'https://platform.openai.com/docs/guides/prompt-engineering#tactic-instruct-the-model-to-work-out-its-own-solution-before-rushing-to-a-conclusion',
+    docs_section: 'OpenAI Prompt Engineering Guide',
   },
   {
     id: '5',
@@ -212,6 +217,8 @@ export const tips: Tip[] = [
     status: 'active',
     extracted_at: '2024-01-09',
     topic_ids: ['2'],
+    docs_url: 'https://docs.anthropic.com/en/docs/build-with-claude/context-windows',
+    docs_section: 'Anthropic Context Windows Documentation',
   },
   {
     id: '9',

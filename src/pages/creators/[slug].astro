@@ -105,26 +105,49 @@ const topicNames = Object.keys(tipsByTopic).sort();
         )}
       </div>
 
-      <!-- Source breakdown -->
-      {activeSources.length > 0 && (
+      <!-- Source breakdown (clickable filters) -->
+      {activeSources.length > 1 && (
         <div class="mt-4 pt-4 border-t border-gray-100">
-          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Content Sources</p>
-          <div class="flex flex-wrap gap-3">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Filter by Source</p>
+          <div class="flex flex-wrap gap-2" id="source-filters">
+            <button
+              type="button"
+              data-filter="all"
+              class="source-filter active flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border border-gray-300 bg-gray-900 text-white transition-colors"
+            >
+              All ({tips.length})
+            </button>
             {activeSources.map(([source, count]) => {
               const config = sourceConfig[source];
               return (
-                <div class="flex items-center gap-1.5 text-sm">
+                <button
+                  type="button"
+                  data-filter={source}
+                  class="source-filter flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border border-gray-200 bg-white text-gray-700 hover:border-gray-400 transition-colors"
+                >
                   <span class={config.color}>{config.icon}</span>
-                  <span class="text-gray-600">{config.label}</span>
+                  <span>{config.label}</span>
                   <span class="text-gray-400">({count})</span>
-                </div>
+                </button>
               );
             })}
           </div>
         </div>
       )}
 
-      <p class="text-sm text-gray-500 mt-4">{tips.length} tips total</p>
+      <!-- Single source display (no filtering needed) -->
+      {activeSources.length === 1 && (
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Content Source</p>
+          <div class="flex items-center gap-1.5 text-sm">
+            <span class={sourceConfig[activeSources[0][0]].color}>{sourceConfig[activeSources[0][0]].icon}</span>
+            <span class="text-gray-600">{sourceConfig[activeSources[0][0]].label}</span>
+            <span class="text-gray-400">({activeSources[0][1]})</span>
+          </div>
+        </div>
+      )}
+
+      <p class="text-sm text-gray-500 mt-4" id="tip-count">{tips.length} tips total</p>
     </header>
 
     <!-- Topic breakdown -->
@@ -148,11 +171,55 @@ const topicNames = Object.keys(tipsByTopic).sort();
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
         All Tips
       </h2>
-      <div class="space-y-3">
+      <div class="space-y-3" id="tips-list">
         {tips.map(tip => (
-          <TipCard tip={tip} />
+          <div data-source={tip.source_type} class="tip-item">
+            <TipCard tip={tip} />
+          </div>
         ))}
       </div>
     </section>
   </div>
+
+  <!-- Progressive enhancement: source filtering -->
+  <script>
+    const filters = document.getElementById('source-filters');
+    const tipsList = document.getElementById('tips-list');
+    const tipCount = document.getElementById('tip-count');
+
+    if (filters && tipsList) {
+      filters.addEventListener('click', (e) => {
+        const button = (e.target as HTMLElement).closest('.source-filter') as HTMLButtonElement;
+        if (!button) return;
+
+        const filter = button.dataset.filter;
+        const tips = tipsList.querySelectorAll('.tip-item');
+
+        // Update active state
+        filters.querySelectorAll('.source-filter').forEach(btn => {
+          btn.classList.remove('bg-gray-900', 'text-white', 'border-gray-300');
+          btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+        });
+        button.classList.remove('bg-white', 'text-gray-700', 'border-gray-200');
+        button.classList.add('bg-gray-900', 'text-white', 'border-gray-300');
+
+        // Filter tips
+        let visibleCount = 0;
+        tips.forEach(tip => {
+          const tipEl = tip as HTMLElement;
+          if (filter === 'all' || tipEl.dataset.source === filter) {
+            tipEl.style.display = '';
+            visibleCount++;
+          } else {
+            tipEl.style.display = 'none';
+          }
+        });
+
+        // Update count
+        if (tipCount) {
+          tipCount.textContent = `${visibleCount} tip${visibleCount === 1 ? '' : 's'} ${filter === 'all' ? 'total' : 'shown'}`;
+        }
+      });
+    }
+  </script>
 </BaseLayout>

@@ -128,6 +128,21 @@ const sourceTypeLabels = {
       </a>
     </div>
 
+    <!-- Official docs reference -->
+    {tip.docs_url && (
+      <div class="flex items-start gap-2">
+        <span class="text-gray-400">Docs:</span>
+        <a
+          href={tip.docs_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-600 hover:text-blue-800 transition-colors underline underline-offset-2"
+        >
+          {tip.docs_section || 'Official documentation'} →
+        </a>
+      </div>
+    )}
+
     <!-- Dates -->
     <div class="flex flex-wrap gap-4 text-xs text-gray-500">
       <span>Extracted: {tip.extracted_at}</span>
