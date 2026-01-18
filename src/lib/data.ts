@@ -284,3 +284,13 @@ export function getTopicBySlug(slug: string): Topic | undefined {
 export function getCreatorBySlug(slug: string): Creator | undefined {
   return creators.find(c => c.slug === slug);
 }
+
+export type SourceType = Tip['source_type'];
+
+export function getTipCountsBySource(creatorId: string): Record<SourceType, number> {
+  const creatorTips = getTipsByCreator(creatorId);
+  return creatorTips.reduce((acc, tip) => {
+    acc[tip.source_type] = (acc[tip.source_type] || 0) + 1;
+    return acc;
+  }, {} as Record<SourceType, number>);
+}

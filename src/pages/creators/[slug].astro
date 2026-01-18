@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TipCard from '../../components/TipCard.astro';
-import { creators, getCreatorBySlug, getTipsByCreator, getTopic } from '../../lib/data';
+import { creators, getCreatorBySlug, getTipsByCreator, getTopic, getTipCountsBySource, type SourceType } from '../../lib/data';
 
 export function getStaticPaths() {
   return creators.map(creator => ({
@@ -17,6 +17,20 @@ if (!creator) {
 }
 
 const tips = getTipsByCreator(creator.id);
+const tipCountsBySource = getTipCountsBySource(creator.id);
+
+// Source metadata for display
+const sourceConfig: Record<SourceType, { label: string; icon: string; color: string }> = {
+  twitter: { label: 'Twitter/X', icon: '𝕏', color: 'text-gray-900' },
+  linkedin: { label: 'LinkedIn', icon: '🔗', color: 'text-blue-700' },
+  youtube: { label: 'YouTube', icon: '▶', color: 'text-red-600' },
+  blog: { label: 'Blog', icon: '📝', color: 'text-gray-700' },
+};
+
+// Get sources that have tips, sorted by count descending
+const activeSources = (Object.entries(tipCountsBySource) as [SourceType, number][])
+  .filter(([_, count]) => count > 0)
+  .sort((a, b) => b[1] - a[1]);
 
 // Group tips by topic
 const tipsByTopic = tips.reduce((acc, tip) => {
@@ -91,7 +105,26 @@ const topicNames = Object.keys(tipsByTopic).sort();
         )}
       </div>
 
-      <p class="text-sm text-gray-500 mt-4">{tips.length} tips from this creator</p>
+      <!-- Source breakdown -->
+      {activeSources.length > 0 && (
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Content Sources</p>
+          <div class="flex flex-wrap gap-3">
+            {activeSources.map(([source, count]) => {
+              const config = sourceConfig[source];
+              return (
+                <div class="flex items-center gap-1.5 text-sm">
+                  <span class={config.color}>{config.icon}</span>
+                  <span class="text-gray-600">{config.label}</span>
+                  <span class="text-gray-400">({count})</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <p class="text-sm text-gray-500 mt-4">{tips.length} tips total</p>
     </header>
 
     <!-- Topic breakdown -->
