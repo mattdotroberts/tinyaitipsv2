@@ -3,7 +3,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import TipCard from '../components/TipCard.astro';
 import CreatorCard from '../components/CreatorCard.astro';
 import TopicNav from '../components/TopicNav.astro';
-import { tips, topics, creators } from '../lib/data';
+import { tips, topics, creators, getCurrentDigest, getHighlightedTips, getTopic } from '../lib/data';
+
+// Current week's digest
+const currentDigest = getCurrentDigest();
+const highlightedTips = currentDigest ? getHighlightedTips(currentDigest) : [];
+const digestTheme = currentDigest?.theme_topic_id ? getTopic(currentDigest.theme_topic_id) : null;
+
+// Format date for digest
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 // Get recent tips (sorted by extracted_at, newest first)
 const recentTips = [...tips]
@@ -29,6 +40,57 @@ const creatorsWithCounts = creators.map(c => ({
         Atomic AI advice extracted from the best creators. Quick tips you can use right now.
       </p>
     </header>
+
+    <!-- This Week's Digest -->
+    {currentDigest && (
+      <section class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">This Week</p>
+            <h2 class="text-lg font-bold text-gray-900">{currentDigest.title}</h2>
+            <p class="text-sm text-gray-500">
+              {formatDate(currentDigest.week_start)} – {formatDate(currentDigest.week_end)}
+              {digestTheme && (
+                <span class="ml-2 text-blue-600">#{digestTheme.name}</span>
+              )}
+            </p>
+          </div>
+          <a
+            href={`/digest/${currentDigest.slug}`}
+            class="text-sm text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap"
+          >
+            Full digest →
+          </a>
+        </div>
+
+        <p class="text-gray-700 mb-4">{currentDigest.summary}</p>
+
+        {highlightedTips.length > 0 && (
+          <div class="space-y-2">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Top Tips</p>
+            <div class="space-y-2">
+              {highlightedTips.map(tip => (
+                <a
+                  href={`/tips/${tip.slug}`}
+                  class="block bg-white rounded-lg p-3 border border-blue-100 hover:border-blue-300 transition-colors"
+                >
+                  <p class="font-medium text-gray-900 text-sm">{tip.title}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div class="mt-4 pt-4 border-t border-blue-100 flex items-center justify-between text-sm">
+          <a
+            href="/digest"
+            class="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Browse past digests
+          </a>
+        </div>
+      </section>
+    )}
 
     <!-- Topics -->
     <section>
