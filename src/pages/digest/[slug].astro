@@ -1,0 +1,151 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TipCard from '../../components/TipCard.astro';
+import { weeklyDigests, getDigestBySlug, getTipsForDigest, getHighlightedTips, getTopic, getCreator } from '../../lib/data';
+
+export function getStaticPaths() {
+  return weeklyDigests.map(digest => ({
+    params: { slug: digest.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const digest = getDigestBySlug(slug);
+
+if (!digest) {
+  return Astro.redirect('/404');
+}
+
+const allTips = getTipsForDigest(digest);
+const highlightedTips = getHighlightedTips(digest);
+const themeTopic = digest.theme_topic_id ? getTopic(digest.theme_topic_id) : null;
+
+// Get unique creators from this week's tips
+const creatorIds = [...new Set(allTips.map(t => t.creator_id))];
+const creatorsThisWeek = creatorIds.map(id => getCreator(id)).filter(Boolean);
+
+// Format dates nicely
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const dateRange = `${formatDate(digest.week_start)} – ${formatDate(digest.week_end)}, ${digest.week_start.split('-')[0]}`;
+
+// Find adjacent digests for navigation
+const currentIndex = weeklyDigests.findIndex(d => d.slug === slug);
+const prevDigest = weeklyDigests[currentIndex + 1]; // older
+const nextDigest = weeklyDigests[currentIndex - 1]; // newer
+---
+
+<BaseLayout
+  title={`${digest.title} — Week of ${formatDate(digest.week_start)}`}
+  description={digest.summary}
+>
+  <article class="space-y-8">
+    <!-- Header -->
+    <header class="border-b border-gray-200 pb-6">
+      <p class="text-sm text-gray-500 mb-2">Weekly Digest</p>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">{digest.title}</h1>
+      <p class="text-sm text-gray-600 mb-4">{dateRange}</p>
+      <p class="text-lg text-gray-700">{digest.summary}</p>
+
+      <!-- Week stats -->
+      <div class="flex flex-wrap gap-4 mt-4 text-sm">
+        <span class="text-gray-600">
+          <span class="font-medium text-gray-900">{allTips.length}</span> tips
+        </span>
+        <span class="text-gray-600">
+          <span class="font-medium text-gray-900">{creatorsThisWeek.length}</span> creators
+        </span>
+        {themeTopic && (
+          <a
+            href={`/topics/${themeTopic.slug}`}
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Theme: {themeTopic.name}
+          </a>
+        )}
+      </div>
+    </header>
+
+    <!-- Highlighted tips -->
+    {highlightedTips.length > 0 && (
+      <section>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Top Tips This Week
+        </h2>
+        <div class="space-y-3">
+          {highlightedTips.map(tip => (
+            <div class="ring-2 ring-blue-100 rounded-lg">
+              <TipCard tip={tip} />
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- All tips this week -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+        All Tips from This Week
+      </h2>
+      <div class="space-y-3">
+        {allTips.map(tip => (
+          <TipCard tip={tip} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Contributors -->
+    {creatorsThisWeek.length > 0 && (
+      <section class="bg-gray-50 rounded-lg p-4">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Contributors This Week
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {creatorsThisWeek.map(creator => creator && (
+            <a
+              href={`/creators/${creator.slug}`}
+              class="text-sm bg-white border border-gray-200 px-3 py-1 rounded-full text-gray-700 hover:border-gray-400 transition-colors"
+            >
+              {creator.name}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Navigation between weeks -->
+    <nav class="flex justify-between items-center pt-6 border-t border-gray-200 text-sm">
+      {prevDigest ? (
+        <a
+          href={`/digest/${prevDigest.slug}`}
+          class="text-blue-600 hover:text-blue-800 transition-colors"
+        >
+          ← {prevDigest.title}
+        </a>
+      ) : (
+        <span></span>
+      )}
+
+      <a
+        href="/digest"
+        class="text-gray-500 hover:text-gray-700 transition-colors"
+      >
+        All Digests
+      </a>
+
+      {nextDigest ? (
+        <a
+          href={`/digest/${nextDigest.slug}`}
+          class="text-blue-600 hover:text-blue-800 transition-colors"
+        >
+          {nextDigest.title} →
+        </a>
+      ) : (
+        <span class="text-gray-400">Latest</span>
+      )}
+    </nav>
+  </article>
+</BaseLayout>

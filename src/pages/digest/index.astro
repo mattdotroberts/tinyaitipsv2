@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { weeklyDigests, getTipsForDigest, getTopic } from '../../lib/data';
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+---
+
+<BaseLayout
+  title="Weekly Digests — AI Tips Archive"
+  description="Browse our archive of weekly AI tips digests. Each week we summarize the best tips from top AI creators."
+>
+  <div class="space-y-8">
+    <header>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Weekly Digests</h1>
+      <p class="text-gray-600">
+        Every week we curate and summarize the best AI tips. Browse the archive to catch up on what you missed.
+      </p>
+    </header>
+
+    <div class="space-y-4">
+      {weeklyDigests.map((digest, index) => {
+        const tips = getTipsForDigest(digest);
+        const themeTopic = digest.theme_topic_id ? getTopic(digest.theme_topic_id) : null;
+        const dateRange = `${formatDate(digest.week_start)} – ${formatDate(digest.week_end)}`;
+        const isLatest = index === 0;
+
+        return (
+          <a
+            href={`/digest/${digest.slug}`}
+            class="block group border border-gray-200 rounded-lg p-4 hover:border-gray-400 hover:shadow-sm transition-all"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h2 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {digest.title}
+                  </h2>
+                  {isLatest && (
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium">
+                      Latest
+                    </span>
+                  )}
+                </div>
+                <p class="text-sm text-gray-500 mb-2">{dateRange}</p>
+                <p class="text-sm text-gray-600 line-clamp-2">{digest.summary}</p>
+              </div>
+              <div class="text-right text-sm text-gray-500 shrink-0">
+                <p class="font-medium text-gray-900">{tips.length} tips</p>
+                {themeTopic && (
+                  <p class="text-xs text-gray-400">{themeTopic.name}</p>
+                )}
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Subscribe CTA placeholder -->
+    <div class="bg-gray-50 rounded-lg p-6 text-center">
+      <p class="text-gray-700 font-medium mb-2">Never miss a digest</p>
+      <p class="text-sm text-gray-500 mb-4">
+        Weekly summaries delivered to your inbox every Monday.
+      </p>
+      <button
+        type="button"
+        disabled
+        class="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium opacity-50 cursor-not-allowed"
+      >
+        Subscribe (Coming Soon)
+      </button>
+    </div>
+  </div>
+</BaseLayout>

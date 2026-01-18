@@ -39,6 +39,18 @@ export interface Tip {
   docs_section?: string;
 }
 
+export interface WeeklyDigest {
+  id: string;
+  slug: string;              // e.g., "2024-w03"
+  week_start: string;        // ISO date
+  week_end: string;          // ISO date
+  title: string;             // e.g., "Chain of Thought Takes Center Stage"
+  summary: string;           // 2-3 sentence overview
+  highlights: string[];      // Featured tip IDs
+  tip_ids: string[];         // All tips from this week
+  theme_topic_id?: string;   // Optional dominant topic
+}
+
 export const creators: Creator[] = [
   {
     id: '1',
@@ -300,4 +312,61 @@ export function getTipCountsBySource(creatorId: string): Record<SourceType, numb
     acc[tip.source_type] = (acc[tip.source_type] || 0) + 1;
     return acc;
   }, {} as Record<SourceType, number>);
+}
+
+// Weekly digests
+export const weeklyDigests: WeeklyDigest[] = [
+  {
+    id: '1',
+    slug: '2024-w03',
+    week_start: '2024-01-15',
+    week_end: '2024-01-21',
+    title: 'Style Matching and Context Stuffing',
+    summary: 'This week focused on making AI outputs more personalized and accurate. Top tips covered teaching Claude your writing style and using context stuffing for better results with niche topics.',
+    highlights: ['1', '10'],
+    tip_ids: ['1', '5', '10'],
+    theme_topic_id: '1',
+  },
+  {
+    id: '2',
+    slug: '2024-w02',
+    week_start: '2024-01-08',
+    week_end: '2024-01-14',
+    title: 'Chain of Thought Takes Center Stage',
+    summary: 'Reasoning techniques dominated this week. The step-by-step prompting tip gained traction, alongside structured approaches for complex coding tasks and safer refactoring strategies.',
+    highlights: ['4', '3'],
+    tip_ids: ['3', '4', '6', '7'],
+    theme_topic_id: '1',
+  },
+  {
+    id: '3',
+    slug: '2024-w01',
+    week_start: '2024-01-01',
+    week_end: '2024-01-07',
+    title: 'ChatGPT vs Claude: Know Your Tools',
+    summary: 'The first week of 2024 brought practical comparisons between major AI models. Tips covered when to use Claude for long documents and how to tame ChatGPT\'s verbosity.',
+    highlights: ['8', '9'],
+    tip_ids: ['2', '8', '9'],
+    theme_topic_id: '2',
+  },
+];
+
+export function getDigestBySlug(slug: string): WeeklyDigest | undefined {
+  return weeklyDigests.find(d => d.slug === slug);
+}
+
+export function getTipsForDigest(digest: WeeklyDigest): Tip[] {
+  return digest.tip_ids.map(id => tips.find(t => t.id === id)).filter((t): t is Tip => t !== undefined);
+}
+
+export function getHighlightedTips(digest: WeeklyDigest): Tip[] {
+  return digest.highlights.map(id => tips.find(t => t.id === id)).filter((t): t is Tip => t !== undefined);
+}
+
+export function getCurrentDigest(): WeeklyDigest | undefined {
+  return weeklyDigests[0]; // Most recent first
+}
+
+export function getRecentDigests(limit = 5): WeeklyDigest[] {
+  return weeklyDigests.slice(0, limit);
 }
