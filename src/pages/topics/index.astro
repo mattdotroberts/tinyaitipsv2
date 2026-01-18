@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { topics, getTipsByTopic } from '../../lib/data';
+
+const topicsWithCounts = topics.map(topic => ({
+  ...topic,
+  tipCount: getTipsByTopic(topic.id).length,
+})).sort((a, b) => b.tipCount - a.tipCount);
+---
+
+<BaseLayout
+  title="Topics"
+  description="Browse AI tips by topic. Find advice on prompt engineering, ChatGPT, AI coding, and more."
+>
+  <div class="space-y-8">
+    <header>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Topics</h1>
+      <p class="text-gray-600">Browse tips by topic area.</p>
+    </header>
+
+    <div class="space-y-4">
+      {topicsWithCounts.map(topic => (
+        <a
+          href={`/topics/${topic.slug}`}
+          class="block border border-gray-200 rounded-lg p-5 hover:border-gray-400 hover:shadow-sm transition-all group"
+        >
+          <div class="flex items-start justify-between mb-2">
+            <h2 class="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+              {topic.name}
+            </h2>
+            <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+              {topic.tipCount} {topic.tipCount === 1 ? 'tip' : 'tips'}
+            </span>
+          </div>
+          <p class="text-gray-600">{topic.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

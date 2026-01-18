@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TipFull from '../../components/TipFull.astro';
+import RelatedTips from '../../components/RelatedTips.astro';
+import { tips, getTipBySlug, getCreator } from '../../lib/data';
+
+export function getStaticPaths() {
+  return tips.map(tip => ({
+    params: { slug: tip.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const tip = getTipBySlug(slug);
+
+if (!tip) {
+  return Astro.redirect('/404');
+}
+
+const creator = getCreator(tip.creator_id);
+
+// HowTo schema markup
+const howToSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: tip.title,
+  description: tip.content,
+  step: [
+    {
+      '@type': 'HowToStep',
+      text: tip.content,
+    },
+  ],
+  ...(creator && {
+    author: {
+      '@type': 'Person',
+      name: creator.name,
+    },
+  }),
+};
+
+const description = tip.content.length > 160
+  ? tip.content.substring(0, 157) + '...'
+  : tip.content;
+---
+
+<BaseLayout title={tip.title} description={description} schema={howToSchema}>
+  <TipFull tip={tip} />
+  <RelatedTips tip={tip} />
+</BaseLayout>

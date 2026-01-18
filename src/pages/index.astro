@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TipCard from '../components/TipCard.astro';
+import CreatorCard from '../components/CreatorCard.astro';
+import TopicNav from '../components/TopicNav.astro';
+import { tips, topics, creators } from '../lib/data';
+
+// Get recent tips (sorted by extracted_at, newest first)
+const recentTips = [...tips]
+  .sort((a, b) => new Date(b.extracted_at).getTime() - new Date(a.extracted_at).getTime())
+  .slice(0, 5);
+
+// Featured creators (those with most tips)
+const creatorsWithCounts = creators.map(c => ({
+  ...c,
+  tipCount: tips.filter(t => t.creator_id === c.id).length,
+})).sort((a, b) => b.tipCount - a.tipCount);
+---
+
+<BaseLayout
+  title="Tiny AI Tips"
+  description="A directory of atomic AI tips from the best creators. Quick, actionable advice for getting better results from AI tools."
+>
+  <div class="space-y-12">
+    <!-- Hero -->
+    <header class="text-center py-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">Tiny AI Tips</h1>
+      <p class="text-lg text-gray-600 max-w-xl mx-auto">
+        Atomic AI advice extracted from the best creators. Quick tips you can use right now.
+      </p>
+    </header>
+
+    <!-- Topics -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+        Browse by Topic
+      </h2>
+      <TopicNav />
+    </section>
+
+    <!-- Recent Tips -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          Recent Tips
+        </h2>
+        <span class="text-xs text-gray-400">{tips.length} total tips</span>
+      </div>
+      <div class="space-y-3">
+        {recentTips.map(tip => (
+          <TipCard tip={tip} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Creators -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+        Featured Creators
+      </h2>
+      <div class="grid gap-3 sm:grid-cols-2">
+        {creatorsWithCounts.slice(0, 4).map(creator => (
+          <CreatorCard creator={creator} />
+        ))}
+      </div>
+      <div class="mt-4 text-center">
+        <a
+          href="/creators"
+          class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+        >
+          View all creators →
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

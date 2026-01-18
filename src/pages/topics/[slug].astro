@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TipCard from '../../components/TipCard.astro';
+import TopicNav from '../../components/TopicNav.astro';
+import { topics, getTopicBySlug, getTipsByTopic } from '../../lib/data';
+
+export function getStaticPaths() {
+  return topics.map(topic => ({
+    params: { slug: topic.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const topic = getTopicBySlug(slug);
+
+if (!topic) {
+  return Astro.redirect('/404');
+}
+
+const tips = getTipsByTopic(topic.id);
+const topTips = tips.slice(0, 10);
+
+// Related topics (all except current)
+const relatedTopics = topics.filter(t => t.id !== topic.id);
+
+// FAQPage schema markup with top tips as questions
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: topTips.map(tip => ({
+    '@type': 'Question',
+    name: tip.title,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: tip.content,
+    },
+  })),
+};
+---
+
+<BaseLayout
+  title={`${topic.name} Tips`}
+  description={topic.description}
+  schema={faqSchema}
+>
+  <div class="space-y-8">
+    <!-- Header -->
+    <header>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">{topic.name}</h1>
+      <p class="text-gray-600">{topic.description}</p>
+      <p class="text-sm text-gray-500 mt-2">{tips.length} tips in this topic</p>
+    </header>
+
+    <!-- Quick summary of top tips (for AI search density) -->
+    {topTips.length > 0 && (
+      <section class="bg-gray-50 rounded-lg p-6">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Key Tips
+        </h2>
+        <ul class="space-y-3">
+          {topTips.map(tip => (
+            <li class="text-sm">
+              <a
+                href={`/tips/${tip.slug}`}
+                class="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+              >
+                {tip.title}
+              </a>
+              <span class="text-gray-500"> — {tip.content.split('.')[0]}.</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- All tips -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+        All Tips
+      </h2>
+      <div class="space-y-3">
+        {tips.map(tip => (
+          <TipCard tip={tip} />
+        ))}
+      </div>
+    </section>
+
+    <!-- Related topics -->
+    {relatedTopics.length > 0 && (
+      <aside class="border-t border-gray-200 pt-8">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Related Topics
+        </h2>
+        <TopicNav currentSlug={slug} />
+      </aside>
+    )}
+  </div>
+</BaseLayout>

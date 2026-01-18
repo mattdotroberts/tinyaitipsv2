@@ -1,0 +1,49 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  schema?: object;
+}
+
+const { title, description, schema } = Astro.props;
+const fullTitle = title === 'Tiny AI Tips' ? title : `${title} | Tiny AI Tips`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {schema && (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    )}
+  </head>
+  <body class="bg-white text-gray-900 antialiased">
+    <header class="border-b border-gray-200">
+      <nav class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/" class="text-lg font-semibold text-gray-900 hover:text-gray-600 transition-colors">
+          Tiny AI Tips
+        </a>
+        <div class="flex gap-6 text-sm">
+          <a href="/topics" class="text-gray-600 hover:text-gray-900 transition-colors">Topics</a>
+          <a href="/creators" class="text-gray-600 hover:text-gray-900 transition-colors">Creators</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+      <slot />
+    </main>
+
+    <footer class="border-t border-gray-200 mt-16">
+      <div class="max-w-3xl mx-auto px-4 py-8 text-sm text-gray-500">
+        <p>Tiny AI Tips — Atomic AI advice extracted from the best creators.</p>
+      </div>
+    </footer>
+  </body>
+</html>

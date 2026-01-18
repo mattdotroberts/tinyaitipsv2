@@ -1,0 +1,42 @@
+---
+import type { Tip } from '../lib/data';
+import { getCreator, getTopicsForTip } from '../lib/data';
+
+interface Props {
+  tip: Tip;
+}
+
+const { tip } = Astro.props;
+const creator = getCreator(tip.creator_id);
+const topics = getTopicsForTip(tip);
+
+const difficultyColors = {
+  'quick-win': 'bg-green-100 text-green-800',
+  'moderate': 'bg-yellow-100 text-yellow-800',
+  'advanced': 'bg-red-100 text-red-800',
+};
+---
+
+<a href={`/tips/${tip.slug}`} class="block group">
+  <article class="border border-gray-200 rounded-lg p-4 hover:border-gray-400 hover:shadow-sm transition-all">
+    <h3 class="font-medium text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
+      {tip.title}
+    </h3>
+    <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+      {tip.content}
+    </p>
+    <div class="flex items-center gap-3 text-xs">
+      <span class={`px-2 py-0.5 rounded-full font-medium ${difficultyColors[tip.difficulty]}`}>
+        {tip.difficulty}
+      </span>
+      {creator && (
+        <span class="text-gray-500">{creator.name}</span>
+      )}
+      {topics.length > 0 && (
+        <span class="text-gray-400">
+          {topics.map(t => t.name).join(', ')}
+        </span>
+      )}
+    </div>
+  </article>
+</a>

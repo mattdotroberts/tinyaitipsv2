@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TipCard from '../../components/TipCard.astro';
+import { creators, getCreatorBySlug, getTipsByCreator, getTopic } from '../../lib/data';
+
+export function getStaticPaths() {
+  return creators.map(creator => ({
+    params: { slug: creator.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const creator = getCreatorBySlug(slug);
+
+if (!creator) {
+  return Astro.redirect('/404');
+}
+
+const tips = getTipsByCreator(creator.id);
+
+// Group tips by topic
+const tipsByTopic = tips.reduce((acc, tip) => {
+  tip.topic_ids.forEach(topicId => {
+    const topic = getTopic(topicId);
+    if (topic) {
+      if (!acc[topic.name]) {
+        acc[topic.name] = [];
+      }
+      if (!acc[topic.name].find(t => t.id === tip.id)) {
+        acc[topic.name].push(tip);
+      }
+    }
+  });
+  return acc;
+}, {} as Record<string, typeof tips>);
+
+const topicNames = Object.keys(tipsByTopic).sort();
+---
+
+<BaseLayout
+  title={`${creator.name} — AI Tips`}
+  description={`${tips.length} AI tips from ${creator.name}. ${creator.bio}`}
+>
+  <div class="space-y-8">
+    <!-- Header -->
+    <header>
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">{creator.name}</h1>
+      <p class="text-gray-600 mb-4">{creator.bio}</p>
+
+      <!-- Platform links -->
+      <div class="flex flex-wrap gap-3 text-sm">
+        {creator.twitter_handle && (
+          <a
+            href={`https://twitter.com/${creator.twitter_handle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            @{creator.twitter_handle}
+          </a>
+        )}
+        {creator.linkedin_url && (
+          <a
+            href={creator.linkedin_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            LinkedIn
+          </a>
+        )}
+        {creator.youtube_channel && (
+          <a
+            href={creator.youtube_channel}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            YouTube
+          </a>
+        )}
+        {creator.website_url && (
+          <a
+            href={creator.website_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Website
+          </a>
+        )}
+      </div>
+
+      <p class="text-sm text-gray-500 mt-4">{tips.length} tips from this creator</p>
+    </header>
+
+    <!-- Topic breakdown -->
+    {topicNames.length > 1 && (
+      <section class="bg-gray-50 rounded-lg p-4">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Topics
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {topicNames.map(name => (
+            <span class="text-sm bg-white border border-gray-200 px-3 py-1 rounded-full text-gray-700">
+              {name} ({tipsByTopic[name].length})
+            </span>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- All tips -->
+    <section>
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+        All Tips
+      </h2>
+      <div class="space-y-3">
+        {tips.map(tip => (
+          <TipCard tip={tip} />
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
